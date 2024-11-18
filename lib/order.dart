@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_ordering_app/main.dart';
+import 'package:food_ordering_app/profile.dart';
 import 'form.dart';
 
 class OrderPage extends StatefulWidget {
@@ -29,7 +30,6 @@ class _OrderPageState extends State<OrderPage> {
     },
   ];
 
-  
   Future<void> _showDeleteConfirmation(String name) async {
     return showDialog<void>(
       context: context,
@@ -48,7 +48,7 @@ class _OrderPageState extends State<OrderPage> {
             TextButton(
               child: Text('Tidak'),
               onPressed: () {
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
@@ -59,7 +59,7 @@ class _OrderPageState extends State<OrderPage> {
                     _orderItems.indexWhere((item) => item['name'] == name),
                   );
                 });
-                Navigator.of(context).pop(); 
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -100,7 +100,7 @@ class _OrderPageState extends State<OrderPage> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => HomePage()),
+                MaterialPageRoute(builder: (context) => MyApp()),
               ),
               color: Colors.black,
             ),
@@ -111,8 +111,11 @@ class _OrderPageState extends State<OrderPage> {
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: IconButton(
-              icon: const Icon(Icons.person_outline),
-              onPressed: () {},
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ProfilePage()));
+              },
               color: Colors.black,
             ),
           ),
@@ -203,14 +206,9 @@ class _OrderPageState extends State<OrderPage> {
       child: Container(
         margin: const EdgeInsets.only(right: 16.0),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          color: isSelected ? Color(0xFF2D63E2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -290,7 +288,7 @@ class _OrderPageState extends State<OrderPage> {
             child: IconButton(
               icon: Icon(Icons.delete_outline, size: 18, color: Colors.red),
               padding: EdgeInsets.zero,
-              onPressed: () => _showDeleteConfirmation(name), 
+              onPressed: () => _showDeleteConfirmation(name),
             ),
           ),
         ],

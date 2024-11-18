@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'bucket.dart';
 import 'order.dart';
 import 'profile.dart';
+import 'splash.dart';
 
 void main() {
   runApp(MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   @override
@@ -17,13 +19,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HomePage(),
+      home: SplashScreen(),
     );
   }
 }
 
 class HomePage extends StatelessWidget {
-  
   final List<Map<String, String>> menuItems = [
     {
       'name': 'Burger King Medium',
@@ -35,11 +36,7 @@ class HomePage extends StatelessWidget {
       'price': 'Rp. 17.500,00',
       'image': 'assets/kebab.png'
     },
-    {
-      'name': 'Sauge',
-      'price': 'Rp. 45.500,00',
-      'image': 'assets/sauge.png'
-    },
+    {'name': 'Sauge', 'price': 'Rp. 45.500,00', 'image': 'assets/sauge.png'},
     {
       'name': 'Premium Corndog',
       'price': 'Rp. 18.000,00',
@@ -50,29 +47,79 @@ class HomePage extends StatelessWidget {
       'price': 'Rp. 25.000,00',
       'image': 'assets/nasigoreng.png'
     },
-    {
-      'name': 'Es Kopi',
-      'price': 'Rp. 15.000,00',
-      'image': 'assets/eskopi.png'
-    },
+    {'name': 'Es Kopi', 'price': 'Rp. 15.000,00', 'image': 'assets/eskopi.png'},
   ];
+
+  void _handleMenuSelection(BuildContext context, String value) {
+    switch (value) {
+      case 'profile':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage()),
+        );
+        break;
+      case 'about':
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('About Us'),
+              content: Text(
+                  'This is a food ordering app created by M Rafa Gheiza S with Flutter Progamming Language.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
+        leading: PopupMenuButton<String>(
           icon: Icon(Icons.menu),
-          onPressed: () {},
+          offset: Offset(0, 50),
+          onSelected: (String value) => _handleMenuSelection(context, value),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem<String>(
+              value: 'profile',
+              child: Row(
+                children: [
+                  Icon(Icons.person, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Profile'),
+                ],
+              ),
+            ),
+            PopupMenuItem<String>(
+              value: 'about',
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('About Us'),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.person),
             onPressed: () {
               Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ProfilePage()),
-        );
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
             },
           ),
         ],
@@ -87,8 +134,8 @@ class HomePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildCategoryButton('All', Icons.fastfood, true),
-                _buildCategoryButton('Makanan', Icons.restaurant_menu, false),
-                _buildCategoryButton('Minuman', Icons.local_drink, false),
+                _buildCategoryButton('Food', Icons.restaurant_menu, false),
+                _buildCategoryButton('Drink', Icons.local_drink, false),
               ],
             ),
           ),
@@ -118,7 +165,7 @@ class HomePage extends StatelessWidget {
           if (index == 1) {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CartScreen()),
+              MaterialPageRoute(builder: (context) => CartScreen(cartItems: [],)),
             );
           } else if (index == 2) {
             Navigator.push(
@@ -149,7 +196,7 @@ class HomePage extends StatelessWidget {
           child: Icon(icon, color: isSelected ? Colors.white : Colors.black),
         ),
         SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12)), // Menambahkan label text
+        Text(label, style: TextStyle(fontSize: 12)),
       ],
     );
   }

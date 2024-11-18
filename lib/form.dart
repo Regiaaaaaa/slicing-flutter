@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:food_ordering_app/order.dart';
 
 
 class ProductForm extends StatefulWidget {
@@ -10,15 +11,14 @@ class ProductForm extends StatefulWidget {
 class _ProductFormState extends State<ProductForm> {
   final _formKey = GlobalKey<FormState>();
   String? selectedCategory;
-  String? selectedFileName; // Menambahkan variable untuk menyimpan nama file
-
+  String? selectedFileName; 
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
     if (result != null) {
       PlatformFile file = result.files.first;
       setState(() {
-        selectedFileName = file.name; // Menyimpan nama file yang dipilih
+        selectedFileName = file.name; 
       });
       print('Nama file: ${file.name}');
       print('Path file: ${file.path}');
@@ -137,6 +137,11 @@ class _ProductFormState extends State<ProductForm> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {}
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => OrderPage())
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],

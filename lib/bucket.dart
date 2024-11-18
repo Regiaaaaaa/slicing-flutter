@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_ordering_app/profile.dart';
 
 class CartItem {
   final String name;
@@ -15,39 +16,24 @@ class CartItem {
 }
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
+  final List<CartItem> cartItems;  // Menerima daftar item keranjang
+
+  const CartScreen({Key? key, required this.cartItems}) : super(key: key);
 
   @override
   _CartScreenState createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final List<CartItem> cartItems = [
-    CartItem(
-      name: 'Big burger italiano',
-      price: 54000,
-      imageUrl: 'assets/burger.png',
-    ),
-    CartItem(
-      name: 'Coffee Americano',
-      price: 4000,
-      quantity: 2,
-      imageUrl: 'assets/eskopi.png',
-    ),
-    CartItem(
-      name: 'Medium sauge chinnese',
-      price: 45000,
-      imageUrl: 'assets/sauge.png',
-    ),
-  ];
-
+  // Calculate subtotal, tax, and total
   double get subtotal {
-    return cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
+    return widget.cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
   }
 
   double get tax => subtotal * 0.10;
   double get total => subtotal + tax;
 
+  // Handle checkout process
   void _handleCheckout() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -55,6 +41,9 @@ class _CartScreenState extends State<CartScreen> {
         duration: Duration(seconds: 8),
       ),
     );
+
+    // After checkout, go back to the main page
+    Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   @override
@@ -75,14 +64,19 @@ class _CartScreenState extends State<CartScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline, color: Colors.black),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage()),
+              );
+            },
           ),
         ],
       ),
       body: Column(
         children: [
           Expanded(
-            child: cartItems.isEmpty
+            child: widget.cartItems.isEmpty
                 ? const Center(
                     child: Text(
                       'Your cart is empty',
@@ -90,9 +84,9 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   )
                 : ListView.builder(
-                    itemCount: cartItems.length,
+                    itemCount: widget.cartItems.length,
                     itemBuilder: (context, index) {
-                      final item = cartItems[index];
+                      final item = widget.cartItems[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
@@ -166,7 +160,7 @@ class _CartScreenState extends State<CartScreen> {
                                     color: Colors.red),
                                 onPressed: () {
                                   setState(() {
-                                    cartItems.removeAt(index);
+                                    widget.cartItems.removeAt(index);
                                   });
                                 },
                               ),
@@ -216,7 +210,7 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                     Text(
                       'Rp ${total.toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -224,7 +218,7 @@ class _CartScreenState extends State<CartScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: cartItems.isEmpty ? null : _handleCheckout,
+                    onPressed: widget.cartItems.isEmpty ? null : _handleCheckout,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
