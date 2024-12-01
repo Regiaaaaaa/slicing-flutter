@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:food_ordering_app/order.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProductForm extends StatefulWidget {
   @override
@@ -10,21 +9,68 @@ class ProductForm extends StatefulWidget {
 
 class _ProductFormState extends State<ProductForm> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _priceController = TextEditingController();
   String? selectedCategory;
-  String? selectedFileName; 
+  String? selectedFileName;
+  String? selectedFilePath;
+
+  // Fungsi untuk memilih file
   void pickFile() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
 
     if (result != null) {
       PlatformFile file = result.files.first;
       setState(() {
-        selectedFileName = file.name; 
+        selectedFileName = file.name;
+        selectedFilePath = file.path;
       });
       print('Nama file: ${file.name}');
       print('Path file: ${file.path}');
-      print('Ukuran file: ${file.size}');
     } else {
       print("Tidak ada file yang dipilih.");
+    }
+  }
+
+  // Fungsi untuk menambahkan data ke Supabase
+  Future<void> _addProduct() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final name = _nameController.text;
+    final price = double.tryParse(_priceController.text) ?? 0.0;
+    final category = selectedCategory ?? 'Uncategorized';
+
+    try {
+      // Simpan data ke Supabase
+      final response = await Supabase.instance.client.from('foods').insert({
+        'name': name,
+        'price': price,
+        'category': category,
+        'image_url': selectedFileName ?? 'No file selected',
+      });
+
+      // // Periksa error dari Supabase
+      // if (response.error != null) {
+      //   throw response.error!;
+      // }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Produk berhasil ditambahkan!')),
+      );
+
+      // Reset form setelah berhasil
+      _formKey.currentState!.reset();
+      _nameController.clear();
+      _priceController.clear();
+      setState(() {
+        selectedCategory = null;
+        selectedFileName = null;
+        selectedFilePath = null;
+      });
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $error')),
+      );
     }
   }
 
@@ -59,6 +105,7 @@ class _ProductFormState extends State<ProductForm> {
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
+                  controller: _nameController,
                   decoration: InputDecoration(
                     labelText: 'Nama Produk',
                     hintText: 'Masukkan nama produk',
@@ -68,9 +115,16 @@ class _ProductFormState extends State<ProductForm> {
                     filled: true,
                     fillColor: Colors.grey[100],
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Nama produk harus diisi';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _priceController,
                   decoration: InputDecoration(
                     labelText: 'Harga',
                     hintText: 'Masukkan harga',
@@ -81,6 +135,15 @@ class _ProductFormState extends State<ProductForm> {
                     fillColor: Colors.grey[100],
                   ),
                   keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Harga harus diisi';
+                    }
+                    if (double.tryParse(value) == null) {
+                      return 'Harga harus berupa angka';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -94,9 +157,9 @@ class _ProductFormState extends State<ProductForm> {
                     fillColor: Colors.grey[100],
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
-                    DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
-                    DropdownMenuItem(value: 'snack', child: Text('Snack')),
+                    DropdownMenuItem(value: 'Makanan', child: Text('Makanan')),
+                    DropdownMenuItem(value: 'Minuman', child: Text('Minuman')),
+                    DropdownMenuItem(value: 'Snack', child: Text('Snack')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -116,7 +179,7 @@ class _ProductFormState extends State<ProductForm> {
                     children: [
                       ElevatedButton(
                         onPressed: pickFile,
-                        child: Text("Pilih File"),
+                        child: const Text("Pilih File"),
                       ),
                       if (selectedFileName != null) ...[
                         const SizedBox(height: 8),
@@ -135,14 +198,7 @@ class _ProductFormState extends State<ProductForm> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {}
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => OrderPage())
-                      );
-                    },
+                    onPressed: _addProduct,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[700],
                       shape: RoundedRectangleBorder(

@@ -16,7 +16,7 @@ class CartItem {
 }
 
 class CartScreen extends StatefulWidget {
-  final List<CartItem> cartItems;  // Menerima daftar item keranjang
+  final List<CartItem> cartItems; // Menerima daftar item keranjang
 
   const CartScreen({Key? key, required this.cartItems}) : super(key: key);
 
@@ -27,7 +27,8 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   // Calculate subtotal, tax, and total
   double get subtotal {
-    return widget.cartItems.fold(0, (sum, item) => sum + (item.price * item.quantity));
+    return widget.cartItems
+        .fold(0, (sum, item) => sum + (item.price * item.quantity));
   }
 
   double get tax => subtotal * 0.10;
@@ -48,6 +49,7 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.cartItems);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -218,7 +220,8 @@ class _CartScreenState extends State<CartScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: widget.cartItems.isEmpty ? null : _handleCheckout,
+                    onPressed:
+                        widget.cartItems.isEmpty ? null : _handleCheckout,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(

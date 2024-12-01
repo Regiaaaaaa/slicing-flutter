@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:food_ordering_app/main.dart';
 import 'package:food_ordering_app/profile.dart';
-import 'form.dart';
+import 'package:food_ordering_app/form.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderPage extends StatefulWidget {
   @override
@@ -9,64 +10,45 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderPage> {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  List<Map<String, dynamic>> _orderItems = [];
   int _selectedTabIndex = 0;
   final List<String> _tabs = ['Foto', 'Nama Produk', 'Harga', 'Aksi'];
 
-  final List<Map<String, dynamic>> _orderItems = [
-    {
-      'name': 'Burger King Master',
-      'price': 'Rp.50.000,00',
-      'image': 'assets/burger.png',
-    },
-    {
-      'name': 'Ice Coffee',
-      'price': 'Rp.8.000,00',
-      'image': 'assets/eskopi.png',
-    },
-    {
-      'name': 'Sauge Aromatic',
-      'price': 'Rp.35.000,00',
-      'image': 'assets/sauge.png',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchOrderItems();
+  }
 
-  Future<void> _showDeleteConfirmation(String name) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Konfirmasi Hapus'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Apakah Anda yakin ingin menghapus "$name"?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Tidak'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text('Ya'),
-              onPressed: () {
-                setState(() {
-                  _orderItems.removeAt(
-                    _orderItems.indexWhere((item) => item['name'] == name),
-                  );
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+  Future<void> _fetchOrderItems() async {
+    try {
+      final List<dynamic> response = await _supabase.from('foods').select('*');
+
+      setState(() {
+        _orderItems = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching order items: $error')),
+      );
+    }
+  }
+
+  Future<void> _deleteOrderItem(int id) async {
+  try {
+    await _supabase
+        .from('foods')
+        .delete()
+        .eq('id', id);
+
+    _fetchOrderItems(); // Refresh data after deletion
+  } catch (error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error deleting item: $error')),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +82,7 @@ class _OrderPageState extends State<OrderPage> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MyApp()),
+                MaterialPageRoute(builder: (context) => HomePage()),
               ),
               color: Colors.black,
             ),
@@ -134,7 +116,7 @@ class _OrderPageState extends State<OrderPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ProductForm()),
-              );
+              ).then((_) => _fetchOrderItems());
             },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -226,9 +208,11 @@ class _OrderPageState extends State<OrderPage> {
         itemBuilder: (context, index) {
           final item = _orderItems[index];
           return _buildOrderItem(
-            name: item['name']!,
-            price: item['price']!,
-            imagePath: item['image']!,
+           id: item['id'] ?? 0,  // Provide a default if null
+          name: item['name'] as String? ?? 'Unnamed Item',  // Cast and provide default
+          price: item['price'] as int? ?? 0,
+          category: item['category'] as String? ?? 'Unknown category',
+          imagePath: item['image_url'] as String? ?? 'default_image.png',
           );
         },
       ),
@@ -236,8 +220,10 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Widget _buildOrderItem({
+    required int id,
     required String name,
-    required String price,
+    required int price,
+    required String category,
     required String imagePath,
   }) {
     return Container(
@@ -268,7 +254,14 @@ class _OrderPageState extends State<OrderPage> {
                   ),
                 ),
                 Text(
-                  price,
+                  category,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  price.toString(),
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 12,
@@ -288,7 +281,7 @@ class _OrderPageState extends State<OrderPage> {
             child: IconButton(
               icon: Icon(Icons.delete_outline, size: 18, color: Colors.red),
               padding: EdgeInsets.zero,
-              onPressed: () => _showDeleteConfirmation(name),
+              onPressed: () => _deleteOrderItem(id),
             ),
           ),
         ],
